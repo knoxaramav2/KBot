@@ -1,10 +1,14 @@
 PCKG STD
 
 DEF CHASSIS
+	#Component
 	COST=100
 	NAME=Dev Shell
-	ID=DEVSHELL
+	DESC=Dev mode chassis
+	ID=DEVCHASSIS
 	SPRITE=DevShell1
 	DIM=64,64
 	HEALTH=50
+	ATTACH=32,48:WEAPON
+	#new
 

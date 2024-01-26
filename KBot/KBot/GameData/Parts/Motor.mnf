@@ -1,0 +1,14 @@
+PCKG STD
+
+DEF WEAPON
+	#Component
+	COST=200
+	NAME=Dev Motor
+	DESC=Dev mode Motor
+	ID=DEVMOTOR
+	SPRITE=DevMotor
+	DIM=64,64
+	HEALTH=50
+	ATTACH=32,32:MOBO
+	#new
+

@@ -1,0 +1,13 @@
+PCKG STD
+
+DEF WEAPON
+	#Component
+	COST=200
+	NAME=Dev Weapon
+	DESC=Dev mode weapon
+	ID=DEVGUN
+	SPRITE=DevGun1
+	DIM=64,64
+	HEALTH=50
+	#new
+

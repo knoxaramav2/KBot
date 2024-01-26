@@ -13,6 +13,13 @@ namespace KBot.Depots
     public class ComponentDepot
     {
         private Dictionary<string, Chassis> ChassisDepot;
+        private Dictionary<string, CPU> CpuDepot;
+        private Dictionary<string, Mem> MemDepot;
+        private Dictionary<string, Motor> MotorDepot;
+        private Dictionary<string, PowerCell> PowerDepot;
+        private Dictionary<string, Utility> UtilDepot;
+        private Dictionary<string, Weapon> WeaponDepot;
+        private Dictionary<string, MotherBoard> MoboDepot;
 
         private (PartType type, string[], int) ParseBlock(ref string[] list, int idx, ref string package)
         {
@@ -43,6 +50,13 @@ namespace KBot.Depots
                     switch (value)
                     {
                         case "CHASSIS": type = PartType.Chassis; break;
+                        case "CPU": type = PartType.CPU; break;
+                        case "MEM": type = PartType.Mem; break;
+                        case "MOTOR": type = PartType.Motor; break;
+                        case "POWER": type = PartType.Power; break;
+                        case "UTIL": type = PartType.Util; break;
+                        case "WEAPON": type = PartType.Weapon; break;
+                        case "MOBO": type = PartType.Mobo; break;
                         default:
                             Debug.WriteLine($"WRN: Invalid MNF part type\n\t{ln}");
                             break;
@@ -60,7 +74,7 @@ namespace KBot.Depots
         {
             switch (type)
             {
-                case PartType.Chassis: break;
+                case PartType.Chassis:  break;
             }
         }
 
@@ -70,9 +84,14 @@ namespace KBot.Depots
 
             switch (type)
             {
-                case PartType.Chassis:
-                    cmp = new Chassis(block, pckg);
-                    break;
+                case PartType.Chassis: cmp = new Chassis(block, pckg); break;
+                case PartType.CPU: cmp = new CPU(block, pckg); break;
+                case PartType.Mem: cmp = new Mem(block, pckg); break;
+                case PartType.Motor: cmp = new Motor(block, pckg); break;
+                case PartType.Power: cmp = new PowerCell(block, pckg); break;
+                case PartType.Util: cmp = new Utility(block, pckg); break;
+                case PartType.Weapon: cmp = new Weapon(block, pckg); break;
+                case PartType.Mobo: cmp = new MotherBoard(block, pckg); break;
             }
 
             if (cmp != null)
@@ -104,6 +123,15 @@ namespace KBot.Depots
 
         public ComponentDepot() 
         {
+            ChassisDepot = new();
+            CpuDepot = new();
+            MemDepot = new();
+            MotorDepot = new();
+            PowerDepot = new();
+            UtilDepot = new();
+            WeaponDepot = new();
+            MoboDepot = new();
+
             Load();
         }
     }
