@@ -1,36 +1,58 @@
 ﻿using KBot.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Xna.Framework.Input;
 
 namespace KBot.UI
 {
     public class MainMenu : Menu
     {
         readonly SpriteFont Font;
+        private GameState RetVal;
 
         private void InitComponents()
         {
-            Button testBtn = new Button(text:"Test", 
-                clickCallback: () => System.Diagnostics.Debug.WriteLine("CLICK"),
+            Button newBtn = new Button(text: "New Game",
+                clickCallback: () => { System.Diagnostics.Debug.WriteLine("NEW"); RetVal = GameState.NewGame; },
                 releaseCallback: () => System.Diagnostics.Debug.WriteLine("RELEASE"));
 
-            Insert(testBtn);
+            Button loadBtn = new Button(text: "Load Game",
+                clickCallback: () => { System.Diagnostics.Debug.WriteLine("LOAD"); RetVal = GameState.LoadGame; },
+                releaseCallback: () => System.Diagnostics.Debug.WriteLine("RELEASE"));
+
+            Button sttBtn = new Button(text: "Settings Game",
+                clickCallback: () => { System.Diagnostics.Debug.WriteLine("SETTINGS"); RetVal = GameState.Settings; },
+                releaseCallback: () => System.Diagnostics.Debug.WriteLine("RELEASE"));
+
+            Button exitBtn = new Button(text: "Exit",
+                clickCallback: () => { System.Diagnostics.Debug.WriteLine("EXIT"); RetVal = GameState.Exit; },
+                releaseCallback: () => System.Diagnostics.Debug.WriteLine("RELEASE"));
+
+            Insert(newBtn, new Point(0, 0));
+            Insert(loadBtn, new Point(0, 1));
+            Insert(sttBtn, new Point(0, 2));
+            Insert(exitBtn, new Point(0, 3));
+
+            Pack();
         }
 
-        public MainMenu() : base(GeoTypes.PACK) {
+        public MainMenu() : base(GeoTypes.GRID, margin:new Point(1,1)) {
+            var size = Providers.Graphics.GraphicsDevice.Viewport.Bounds.Size;
+            RetVal = GameState.NoChange;
+            Move(new Point(0, 0), size);
             Font = Providers.Fonts.Get();
             InitComponents();
+            Config(Color.Red, Providers.Sprites.Get("Box1"));
+        }
+
+        public override GameState Update(KeyboardState kbst, MouseState mst)
+        {
+            base.Update(kbst, mst);
+            return RetVal;
         }
 
         public override void Draw()
         {
-            //DrawCtx.DrawString(Font, "Test value",
-            //    new Vector2(100, 100), Color.Black);
             base.Draw();
         }
     }

@@ -1,9 +1,10 @@
 ﻿using KBot.UI;
 using KBot.Util;
+using KBot.Depots;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
+using System.Diagnostics;
 
 namespace KBot
 {
@@ -16,8 +17,8 @@ namespace KBot
 
         private GameState _state;
         private MainMenu _mainMenu;
-
-        enum GameState { MainMenu, Pause, Normal }
+        private NewGameMenu _newMenu;
+        private GameLoop _gameLoop;
 
         public MainLoop()
         {
@@ -28,12 +29,15 @@ namespace KBot
 
         protected override void Initialize()
         {
-            System.Diagnostics.Debug.WriteLine("STARTING...");
-            // TODO: Add your initialization logic here
-            _state = GameState.MainMenu;
+            Debug.WriteLine("STARTING...");
+            _state = GameState.GameLoop;
             _drawCtx = new SpriteBatch(GraphicsDevice);
             Providers.Init(_graphics, _drawCtx, Content);
+
+            _ = Depots.Depots.Depot;
+
             _mainMenu = new();
+            _gameLoop = new();
 
             base.Initialize();
         }
@@ -50,14 +54,46 @@ namespace KBot
 
             var kbst = Keyboard.GetState();
             var mst = Mouse.GetState();
+            var res = GameState.NoChange;
 
             switch (_state)
             {
                 case GameState.MainMenu:
-                    _mainMenu.Update(kbst, mst);
+                    res = _mainMenu.Update(kbst, mst);
                     break;
-                case GameState.Pause: break;
-                case GameState.Normal: break;
+                case GameState.NewGame:
+                    res = _newMenu.Update(kbst, mst);
+                    break;
+                case GameState.LoadGame:
+                    break;
+                case GameState.GameLoop:
+                    res = _gameLoop.Update(kbst, mst);
+                    break;
+                case GameState.Pause:
+                    break;
+                case GameState.Settings:
+                    break;
+                case GameState.Exit:
+                    Exit();
+                    break;
+            }
+
+            if (res != GameState.NoChange)
+            {
+                switch(res)
+                {
+                    case GameState.MainMenu:    { _mainMenu = new(); break; }
+                    case GameState.NewGame:     { _newMenu = new(); break; }
+                    case GameState.LoadGame:    { res = GameState.MainMenu; break; }
+                    case GameState.GameLoop:    { _gameLoop = new(); break; }
+                    case GameState.Pause:       { res = GameState.MainMenu; break; }
+                    case GameState.Settings:    { res = GameState.MainMenu; break; }
+                    default:
+                        Debug.WriteLine($">>> {res}");
+                        break;
+                }
+
+                _state = res;
             }
 
             base.Update(gameTime);
@@ -74,12 +110,19 @@ namespace KBot
                 case GameState.MainMenu:
                     _mainMenu.Draw();
                     break;
-                case GameState.Pause: break;
-                case GameState.Normal: break;
+                case GameState.NewGame:
+                    _newMenu.Draw();
+                    break;
+                case GameState.LoadGame:
+                    break;
+                case GameState.GameLoop:
+                    _gameLoop.Draw();
+                    break;
+                case GameState.Pause: 
+                    break;
+                
             }
                 
-            //_drawCtx.Draw(shell, new Rectangle(0, 0, 64, 64), 
-            //    new Rectangle(0, 0, shell.Width, shell.Height), Color.White);
             _drawCtx.End();
 
             base.Draw(gameTime);

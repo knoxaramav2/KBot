@@ -3,13 +3,8 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using KBot.Util;
-using System.Reflection.Metadata;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Content;
-using Microsoft.VisualBasic;
 
 namespace KBot.UI
 {
@@ -43,10 +38,10 @@ namespace KBot.UI
             Dim = new();
             Image = img;
             Color = (Color)clr;
-            Set(pos, size);
+            Move(pos, size);
         }
 
-        public void Set(Point? pos = null, Point? size = null)
+        public virtual void Move(Point? pos = null, Point? size = null)
         {
             if (size != null) { Dim.Size = (Point)size; }
             if (pos != null)
@@ -87,23 +82,28 @@ namespace KBot.UI
 
         protected Vector2 AlignChild(Vector2 obj, Align align)
         {
-            Vector2 pos = new();
-            var margin_w = (Dim.Width - obj.X) / 2;
-            var margin_h = (Dim.Height - obj.Y) / 2;
+            return AlignChild(Dim, obj, align);
+        }
+    
+        public static Vector2 AlignChild(Rectangle origin, Vector2 obj, Align align)
+        {
+            Vector2 pos;
+            var margin_w = (origin.Width - obj.X) / 2;
+            var margin_h = (origin.Height - obj.Y) / 2;
 
             switch (align)
             {
-                case Align.TL: pos = new Vector2(Dim.Left, Dim.Top); break;
-                case Align.TC: pos = new Vector2(Dim.Center.X + margin_w, Dim.Top); break;
-                case Align.TR: pos = new Vector2(Dim.Right - obj.X, Dim.Top); break;
+                case Align.TL: pos = new Vector2(origin.Left, origin.Top); break;
+                case Align.TC: pos = new Vector2(origin.Center.X + margin_w, origin.Top); break;
+                case Align.TR: pos = new Vector2(origin.Right - obj.X, origin.Top); break;
 
-                case Align.CL: pos = new Vector2(Dim.Left, Dim.Top + margin_h); break;
-                case Align.CC: pos = new Vector2(Dim.Left + margin_w, Dim.Top + margin_h); break;
-                case Align.CR: pos = new Vector2(Dim.Right - obj.X, Dim.Top + margin_h); break;
+                case Align.CL: pos = new Vector2(origin.Left, origin.Top + margin_h); break;
+                case Align.CC: pos = new Vector2(origin.Left + margin_w, origin.Top + margin_h); break;
+                case Align.CR: pos = new Vector2(origin.Right - obj.X, origin.Top + margin_h); break;
 
-                case Align.BL: pos = new Vector2(Dim.Left, Dim.Bottom - obj.Y); break;
-                case Align.BC: pos = new Vector2(Dim.Left + margin_w, Dim.Bottom - obj.Y); break;
-                case Align.BR: pos = new Vector2(Dim.Right - obj.X, Dim.Bottom - obj.Y); break;
+                case Align.BL: pos = new Vector2(origin.Left, origin.Bottom - obj.Y); break;
+                case Align.BC: pos = new Vector2(origin.Left + margin_w, origin.Bottom - obj.Y); break;
+                case Align.BR: pos = new Vector2(origin.Right - obj.X, origin.Bottom - obj.Y); break;
 
                 default:
                     pos = new Vector2();
@@ -213,12 +213,12 @@ namespace KBot.UI
             string text="", Align align=Align.CC) 
             : base(parent, baseImg, baseClr, pressImg, pressClr, pos, size, clickCallback, releaseCallback)
         {
-            ActiveImg = pressImg ?? Providers.Images.Get("Box1");
+            ActiveImg = pressImg ?? Providers.Sprites.Get("Box1");
             Point dim = new((int)(Dim.Width * 0.9), (int)(Dim.Height * 0.9));
             var center = AlignChild(dim.ToVector2(), Align.CC);
             Label = new Label(align:align, size:dim, pos:center.ToPoint(), text:text, bgClr:pressClr, bgImg:pressImg);
 
-            var box = Providers.Images.Get("Box1");
+            var box = Providers.Sprites.Get("Box1");
             baseImg ??= box;
             baseClr ??= Color.Gray;
             pressImg ??= box;
@@ -250,34 +250,82 @@ namespace KBot.UI
 
             base.Click();
         }
+
+        public override void Move(Point? pos = null, Point? size = null)
+        {
+            if (Label != null) { Label.Move(pos, size); }
+            base.Move(pos, size);
+        }
     }
 
     public enum GeoTypes
     {
-        GRID, COORD, PACK
+        GRID, COORD, ALIGN
+    }
+
+    public struct ContainerSlotInfo
+    {
+        public Control Item;
+        public Point? Position;
+        public Align? Align;
+
+        public ContainerSlotInfo(Control item, Point? pos=null, Align? align=null)
+        {
+            Item = item;
+            Position = pos;
+            Align = align;
+        }
     }
 
     public class Container : Control
     {
-        GeoTypes Type;
-        readonly protected List<Control> Items;
+        readonly protected List<ContainerSlotInfo> Items;
+        private GeoTypes GeoType;
+        private Point Margin;
         
-        public Container(GeoTypes Type) : base()
+        public Container(GeoTypes gtype, 
+            Color? clr=null, Point?loc=null, Point?size=null, Point?margin=null,
+            Texture2D background=null) : base(clr:clr, pos:loc, size:size, img:background)
         {
-            this.Type = Type;
-            this.Items = new();
+            Items = new();
+            GeoType = gtype;
+            Margin = margin ?? new Point();
         }
 
-        public virtual void Insert(Control item) {
-            if (Items.Contains(item)) return;
-            Items.Insert(0, item);
+        public virtual void Insert(Control item, Point? pos=null, Align? align=null) {
+            if (Items.Any(x => x.Item == item)) { return; }
+            ContainerSlotInfo info = new(item, pos, align);
+
+            switch (GeoType)
+            {
+                case GeoTypes.COORD:
+                    if (pos == null && align != null)
+                    {
+                        throw new Exception("Invalid COORD arguments");
+                    }
+                    break;
+                case GeoTypes.GRID:
+                    if (pos == null && align != null)
+                    {
+                        throw new Exception("Invalid COORD arguments");
+                    }
+                    break;
+                case GeoTypes.ALIGN:
+                    if (pos != null && align == null)
+                    {
+                        throw new Exception("Invalid COORD arguments");
+                    }
+                    break;
+            }
+
+            Items.Insert(0, info);
         }
 
         public override void Update()
         {
             foreach(var item in Items)
             {
-                item.Update();
+                item.Item.Update();
             }
 
             base.Update();
@@ -288,8 +336,56 @@ namespace KBot.UI
             base.Draw();
             foreach (var item in Items)
             {
-                item.Draw();
+                item.Item.Draw();
             }
+        }
+    
+        public void Pack()
+        {
+            switch (GeoType)
+            {
+                case GeoTypes.COORD: PackCoord(); break;
+                case GeoTypes.ALIGN: PackAlign(); break;
+                case GeoTypes.GRID: PackGrid(); break;
+            }
+        }
+
+        private void PackGrid()
+        {
+            var maxX = Items.Max(x => x.Position.Value.X) + Margin.X*2;
+            var maxY = Items.Max(x => x.Position.Value.Y) + Margin.Y*2;
+            var avg_w = Dim.Width / (maxX+1);
+            var avg_h = Dim.Height / (maxY+1);
+            Point[,] grid = new Point[maxY + 1, maxX + 1];
+
+            foreach(var item in Items)
+            {
+                grid[item.Position.Value.Y, item.Position.Value.X] = new Point(avg_w, avg_h);
+            }
+
+            //TODO Rescale
+            foreach(var item in Items)
+            {
+                var pnt = item.Position.Value;
+                var dim = new Point(avg_w, avg_h);
+                pnt = new Point((pnt.X + Margin.X) * dim.X, (pnt.Y + Margin.Y) * dim.Y);
+
+                var rect = new Rectangle(pnt, dim);
+                var npos = AlignChild(rect, item.Item.Dim.Size.ToVector2(), Align.CL);
+                var ndim = new Point(dim.X, (int)(dim.Y*.8));
+                item.Item.Move(npos.ToPoint(), ndim);
+            }
+
+        }
+
+        private void PackCoord()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void PackAlign()
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -345,16 +441,19 @@ namespace KBot.UI
 
         private CommonStateCheck StateCheck { get; set; }
 
-        public Menu(GeoTypes Type) : base(Type)
+        public Menu(GeoTypes gtype, Texture2D background=null,
+            Color? clr = null, Point? loc = null, Point? size = null, Point? margin=null) 
+            : base(gtype, clr:clr, loc:loc, size:size, margin:margin, background:background)
         {
             StateCheck = new();
         }
 
-        public void Update(KeyboardState kbst, MouseState mst)
+        public virtual GameState Update(KeyboardState kbst, MouseState mst)
         {
             StateCheck.Update(mst);
             UpdateClick(mst);
             base.Update();
+            return GameState.NoChange;
         }
 
         private void UpdateClick(MouseState mst)
@@ -365,8 +464,8 @@ namespace KBot.UI
 
             foreach(var item in Items)
             {
-                if(!item.GetType().IsSubclassOf(typeof(Clickable))) { continue; }
-                var curr = (Clickable)item;
+                if(!item.Item.GetType().IsSubclassOf(typeof(Clickable))) { continue; }
+                var curr = (Clickable)item.Item;
                 if (curr.InBounds(mst.Position))
                 {
                     if ( Current != null && curr != Current)
@@ -382,6 +481,7 @@ namespace KBot.UI
                     }
 
                     Current = curr;
+                    break;
                 }
             }
         }
