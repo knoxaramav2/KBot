@@ -1,28 +1,46 @@
-﻿using KBot.Util;
+﻿using KBot.State;
+using KBot.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
+using System.Diagnostics;
+using System.Linq;
 
 namespace KBot.UI
 {
     public class NewGameMenu : Menu
     {
         readonly SpriteFont Font;
-        private GameState RetVal;
+        private GameCtxState RetVal;
+        private string SaveName;
+        private string TestVal;
 
-
-        private void InitComponents()
+        private void InitGameData()
         {
-            Button startBtn = new Button(text: "Start",
-                clickCallback: () => { System.Diagnostics.Debug.WriteLine("START"); RetVal = GameState.GameLoop; },
-                releaseCallback: () => System.Diagnostics.Debug.WriteLine("RELEASE"));
+            Debug.WriteLine($">>>> {TestVal}");
+            var gameData = GameState.State;
+            SaveName = "Test.sav";
+            gameData.SaveName = SaveName;
+            gameData.Save();
+        }
 
-            Button cancelBtn = new Button(text: "Cancel",
-                clickCallback: () => { System.Diagnostics.Debug.WriteLine("CANCEL"); RetVal = GameState.MainMenu; },
-                releaseCallback: () => System.Diagnostics.Debug.WriteLine("RELEASE"));
+        protected override void InitComponents()
+        {
+            TextField nameField = new(text: "<Name>", 
+                bgClr: Color.LightGray, fgClr: Color.Cyan,
+                callback: (string nval) => { TestVal = nval; });
+            Button startBtn = new(text: "Start",
+                clickCallback: () => { Debug.WriteLine("START"); RetVal = GameCtxState.GameLoop; InitGameData(); },
+                releaseCallback: () => Debug.WriteLine("RELEASE"));
 
-            Insert(startBtn, new Point(0, 0));
-            Insert(cancelBtn, new Point(1, 0));
+            Button cancelBtn = new(text: "Cancel",
+                clickCallback: () => { Debug.WriteLine("CANCEL"); RetVal = GameCtxState.MainMenu; },
+                releaseCallback: () => Debug.WriteLine("RELEASE"));
+
+            Insert(nameField, new Point(1, 0));
+            Insert(startBtn, new Point(0, 1));
+            Insert(cancelBtn, new Point(2, 1));
 
             Pack();
         }
@@ -30,14 +48,14 @@ namespace KBot.UI
         public NewGameMenu() : base(GeoTypes.GRID, margin: new Point(1, 1))
         {
             var size = Providers.Graphics.GraphicsDevice.Viewport.Bounds.Size;
-            RetVal = GameState.NoChange;
+            RetVal = GameCtxState.NoChange;
             Move(new Point(0, 0), size);
             Font = Providers.Fonts.Get();
             InitComponents();
             Config(Color.Red, Providers.Sprites.Get("Box1"));
         }
 
-        public override GameState Update(KeyboardState kbst, MouseState mst)
+        public override GameCtxState Update(KeyboardState kbst, MouseState mst)
         {
             base.Update(kbst, mst);
             return RetVal;

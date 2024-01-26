@@ -15,7 +15,7 @@ namespace KBot
         private SpriteFont _font;
         private Texture2D shell;
 
-        private GameState _state;
+        private GameCtxState _state;
         private MainMenu _mainMenu;
         private NewGameMenu _newMenu;
         private GameLoop _gameLoop;
@@ -30,11 +30,13 @@ namespace KBot
         protected override void Initialize()
         {
             Debug.WriteLine("STARTING...");
-            _state = GameState.GameLoop;
+            _state = GameCtxState.MainMenu;
             _drawCtx = new SpriteBatch(GraphicsDevice);
             Providers.Init(_graphics, _drawCtx, Content);
 
-            _ = Depots.Depots.Depot;
+            //Init depots
+            _ = Depots.ComponentDepot.Depots;
+            _ = Depots.FabDepot.Depots;
 
             _mainMenu = new();
             _gameLoop = new();
@@ -54,40 +56,40 @@ namespace KBot
 
             var kbst = Keyboard.GetState();
             var mst = Mouse.GetState();
-            var res = GameState.NoChange;
+            var res = GameCtxState.NoChange;
 
             switch (_state)
             {
-                case GameState.MainMenu:
+                case GameCtxState.MainMenu:
                     res = _mainMenu.Update(kbst, mst);
                     break;
-                case GameState.NewGame:
+                case GameCtxState.NewGame:
                     res = _newMenu.Update(kbst, mst);
                     break;
-                case GameState.LoadGame:
+                case GameCtxState.LoadGame:
                     break;
-                case GameState.GameLoop:
+                case GameCtxState.GameLoop:
                     res = _gameLoop.Update(kbst, mst);
                     break;
-                case GameState.Pause:
+                case GameCtxState.Pause:
                     break;
-                case GameState.Settings:
+                case GameCtxState.Settings:
                     break;
-                case GameState.Exit:
+                case GameCtxState.Exit:
                     Exit();
                     break;
             }
 
-            if (res != GameState.NoChange)
+            if (res != GameCtxState.NoChange)
             {
                 switch(res)
                 {
-                    case GameState.MainMenu:    { _mainMenu = new(); break; }
-                    case GameState.NewGame:     { _newMenu = new(); break; }
-                    case GameState.LoadGame:    { res = GameState.MainMenu; break; }
-                    case GameState.GameLoop:    { _gameLoop = new(); break; }
-                    case GameState.Pause:       { res = GameState.MainMenu; break; }
-                    case GameState.Settings:    { res = GameState.MainMenu; break; }
+                    case GameCtxState.MainMenu:    { _mainMenu = new(); break; }
+                    case GameCtxState.NewGame:     { _newMenu = new(); break; }
+                    case GameCtxState.LoadGame:    { res = GameCtxState.MainMenu; break; }
+                    case GameCtxState.GameLoop:    { _gameLoop = new(); break; }
+                    case GameCtxState.Pause:       { res = GameCtxState.MainMenu; break; }
+                    case GameCtxState.Settings:    { res = GameCtxState.MainMenu; break; }
                     default:
                         Debug.WriteLine($">>> {res}");
                         break;
@@ -107,18 +109,18 @@ namespace KBot
 
             switch (_state)
             {
-                case GameState.MainMenu:
+                case GameCtxState.MainMenu:
                     _mainMenu.Draw();
                     break;
-                case GameState.NewGame:
+                case GameCtxState.NewGame:
                     _newMenu.Draw();
                     break;
-                case GameState.LoadGame:
+                case GameCtxState.LoadGame:
                     break;
-                case GameState.GameLoop:
+                case GameCtxState.GameLoop:
                     _gameLoop.Draw();
                     break;
-                case GameState.Pause: 
+                case GameCtxState.Pause: 
                     break;
                 
             }

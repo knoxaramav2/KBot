@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using KBot.Util;
 using Microsoft.Xna.Framework.Input;
+using System.Diagnostics;
 
 namespace KBot.UI
 {
@@ -142,7 +143,78 @@ namespace KBot.UI
         }
     }
 
-    public class Clickable : Control
+    public class Selectable : Control
+    {
+        public Selectable(Control parent=null, Texture2D bgImg = null, 
+            Color? bgClr = null, Point? pos = null, Point? size = null) 
+            : base(parent, bgImg, bgClr, pos, size)
+        {}
+    }
+
+    public class Typeable : Selectable
+    {
+        public delegate void KeydownCallback(string nval);
+        protected KeydownCallback Callback;
+        protected string Text;
+        
+
+        public Typeable(Control parent = null, Texture2D bgImg = null,
+            Color? bgClr = null, Point? pos = null, Point? size = null,
+            string text="", KeydownCallback callback =null)
+            : base(parent, bgImg, bgClr, pos, size)
+        {
+            Text = text;
+            Callback = callback;
+        }
+
+        public virtual void OnKeyPress(Keys[] keys)
+        {
+            Debug.Write("KP: ");
+            foreach (var key in keys)
+            {
+                Debug.Write($"{key} | ");
+            }
+            Debug.WriteLine("");
+            Callback?.Invoke(Text);
+        }
+    }
+
+    public class TextField : Typeable
+    {
+        private Align Align { get; set; }
+        private SpriteFont Font { get; set; }
+        private Color TextColor { get; set; }
+
+        public TextField(Control parent = null, Texture2D bgImg = null,
+            Color? bgClr = null, Point? pos = null, Point? size = null,
+            string text="", KeydownCallback callback = null,
+            Align align = Align.CC, SpriteFont font=null, Color? fgClr=null)
+            : base(parent, bgImg, bgClr, pos, size, text, callback)
+        {
+            Text = text;
+            Align = align;
+            Font = font ?? Providers.Fonts.Get();
+            TextColor = fgClr ?? Color.White;
+        }
+
+        public override void OnKeyPress(Keys[] keys)
+        {
+
+
+            base.OnKeyPress(keys);
+        }
+
+        public override void Draw()
+        {
+            base.Draw();
+
+            var msr = Font.MeasureString(Text);
+            Vector2 pos = AlignChild(msr, Align);
+            DrawCtx.DrawString(Font, Text, pos, TextColor);
+        }
+    }
+
+    public class Clickable : Selectable
     {
         public delegate void ClickCallback();
  
@@ -402,21 +474,32 @@ namespace KBot.UI
 
     public struct CommonStateCheck
     {
-        private bool[] MStates = { false, false, false, false }; 
+        private bool[] MStates = { false, false, false, false };
+        private int[] KeyStates = {0, 0};
 
         public CommonStateCheck()
         {
         }
 
-        public void Update(MouseState mstate)
+        public void Update(KeyboardState kbst, MouseState mstate)
         {
             MStates[(int)MouseStates.PrevLMouse] = MStates[(int)MouseStates.CurrLMouse];
             MStates[(int)MouseStates.CurrLMouse] = mstate.LeftButton == ButtonState.Pressed;
             MStates[(int)MouseStates.PrevRMouse] = MStates[(int)MouseStates.CurrRMouse];
             MStates[(int)MouseStates.CurrRMouse] = mstate.RightButton == ButtonState.Pressed;
+
+            KeyStates[0] = KeyStates[1];
+            KeyStates[1] = kbst.GetPressedKeyCount();
         }
 
-        private PressState CompareState(bool prev, bool curr)
+        private PressState CompareClickState(int prev, int curr)
+        {
+            if (prev - curr == 0) { return PressState.None; }
+            return prev == curr ? PressState.Hold :
+                prev < curr ? PressState.Click : PressState.Release;
+        }
+
+        private PressState CompareClickState(bool prev, bool curr)
         {
             if (!prev && curr) { return PressState.Click; }
             if (prev && !curr) { return PressState.Release; }
@@ -426,18 +509,23 @@ namespace KBot.UI
 
         public PressState CheckLMouse()
         {
-            return CompareState(MStates[(int)MouseStates.PrevLMouse], MStates[(int)MouseStates.CurrLMouse]);
+            return CompareClickState(MStates[(int)MouseStates.PrevLMouse], MStates[(int)MouseStates.CurrLMouse]);
         }
 
         public PressState CheckRMouse()
         {
-            return CompareState(MStates[(int)MouseStates.PrevRMouse], MStates[(int)MouseStates.CurrRMouse]);
+            return CompareClickState(MStates[(int)MouseStates.PrevRMouse], MStates[(int)MouseStates.CurrRMouse]);
+        }
+    
+        public PressState CheckKState()
+        {
+            return CompareClickState(KeyStates[0], KeyStates[1]);
         }
     }
 
     public class Menu : Container
     {
-        public Control Current { get; set; } = null;
+        public Selectable Current { get; set; } = null;
 
         private CommonStateCheck StateCheck { get; set; }
 
@@ -448,15 +536,16 @@ namespace KBot.UI
             StateCheck = new();
         }
 
-        public virtual GameState Update(KeyboardState kbst, MouseState mst)
+        public virtual GameCtxState Update(KeyboardState kbst, MouseState mst)
         {
-            StateCheck.Update(mst);
-            UpdateClick(mst);
+            StateCheck.Update(kbst, mst);
+            UpdateMouseState(mst);
+            UpdateKeyState(kbst);
             base.Update();
-            return GameState.NoChange;
+            return GameCtxState.NoChange;
         }
 
-        private void UpdateClick(MouseState mst)
+        private void UpdateMouseState(MouseState mst)
         {
             var lmst = StateCheck.CheckLMouse();
 
@@ -464,31 +553,33 @@ namespace KBot.UI
 
             foreach(var item in Items)
             {
-                if(!item.Item.GetType().IsSubclassOf(typeof(Clickable))) { continue; }
-                var curr = (Clickable)item.Item;
-                if (curr.InBounds(mst.Position))
+                var type = item.Item.GetType();
+                if (!type.IsSubclassOf(typeof(Selectable)) || !item.Item.InBounds(mst.Position)) 
+                    { continue; }
+                Current = (Selectable)item.Item;
+                var rand = new Random();
+                var nclr = new Color(rand.Next(255), rand.Next(255), rand.Next(255));
+                Current.Config(clr: nclr);
+                if (type.IsSubclassOf(typeof(Clickable))) 
                 {
-                    if ( Current != null && curr != Current)
-                    {
-                        if (Current.GetType().IsSubclassOf(typeof(Clickable))) 
-                            { ((Clickable)Current).Release(); }
-                    }
-                    switch (lmst)
-                    {
-                        case PressState.Click: { curr.Click(); break; }
-                        case PressState.Release: { curr.Release(); break; }
-                        default: break;
-                    }
-
-                    Current = curr;
-                    break;
+                    if (lmst == PressState.Click) { ((Clickable)item.Item).Click(); }
+                    else if (lmst == PressState.Release) { ((Clickable)item.Item).Release(); }
                 }
+
+                break;
             }
         }
 
-        public virtual void OnType()
+        public virtual void UpdateKeyState(KeyboardState kbst)
         {
-
+            if (kbst.GetPressedKeyCount() == 0) { return; }
+            if (Current == null ||
+                !Current.GetType().IsSubclassOf(typeof(Typeable)) ||
+                StateCheck.CheckKState() != PressState.Click) { return; }
+            ((Typeable)Current).OnKeyPress(kbst.GetPressedKeys());
+            
         }
+
+        protected virtual void InitComponents() { }
     }
 }

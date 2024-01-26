@@ -1,6 +1,6 @@
 PCKG STD
 
-DEF WEAPON
+DEF MOTOR
 	#Component
 	COST=200
 	NAME=Dev Motor

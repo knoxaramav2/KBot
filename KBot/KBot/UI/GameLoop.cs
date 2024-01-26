@@ -17,12 +17,12 @@ namespace KBot.UI
             Factory = new BotFactory();
         }
 
-        public GameState Update(KeyboardState kbst, MouseState mst)
+        public GameCtxState Update(KeyboardState kbst, MouseState mst)
         {
             
             //Bot.ActionIO(kbst, mst);
 
-            return GameState.NoChange;
+            return GameCtxState.NoChange;
         }
 
         public void Draw()

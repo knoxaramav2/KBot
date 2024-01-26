@@ -19,5 +19,7 @@ namespace KBot.Factories
         private static BotFactory __BotFactory = null;
 
         public static BotFactory BotFactory => __BotFactory ??= new();
+    
+        
     }
 }

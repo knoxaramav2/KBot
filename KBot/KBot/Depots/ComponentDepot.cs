@@ -10,8 +10,11 @@ using System.Linq;
 
 namespace KBot.Depots
 {
-    public class ComponentDepot
+    public class ComponentDepot : IDepot<Component>
     {
+        private static ComponentDepot __Depots = null;
+        public static ComponentDepot Depots => __Depots ??= new();
+
         private Dictionary<string, Chassis> ChassisDepot;
         private Dictionary<string, CPU> CpuDepot;
         private Dictionary<string, Mem> MemDepot;
@@ -70,15 +73,27 @@ namespace KBot.Depots
             return (type, ret.ToArray(), idx);
         }
 
-        private void Register(PartType type, Component component)
+        private void Register(Component component)
         {
+            var id = component.ID;
+            var type = component.Type;
+
+            Debug.WriteLine($"REGISTER {type} : {id}");
+
             switch (type)
             {
-                case PartType.Chassis:  break;
+                case PartType.Chassis: ChassisDepot.Add(id, (Chassis)component); break;
+                case PartType.CPU: CpuDepot.Add(id, (CPU)component); break;
+                case PartType.Mem: MemDepot.Add(id, (Mem)component); break;
+                case PartType.Motor: MotorDepot.Add(id, (Motor)component); break;
+                case PartType.Power: PowerDepot.Add(id, (PowerCell)component); break;
+                case PartType.Util: UtilDepot.Add(id, (Utility)component); break;
+                case PartType.Weapon: WeaponDepot.Add(id, (Weapon)component); break;
+                case PartType.Mobo: MoboDepot.Add(id, (MotherBoard)component); break;
             }
         }
 
-        private void Build(PartType type, string[] block, string pckg)
+        private void Build(PartType type, KV[] block, string pckg)
         {
             Component cmp = null;
 
@@ -94,10 +109,7 @@ namespace KBot.Depots
                 case PartType.Mobo: cmp = new MotherBoard(block, pckg); break;
             }
 
-            if (cmp != null)
-            {
-                Register(type, cmp);
-            }
+            if (cmp != null) { Register(cmp); }
         }
 
         public void Load()
@@ -105,20 +117,38 @@ namespace KBot.Depots
             var path = UFile.PartsDir;
             var files = Directory.GetFiles(path, "*.mnf");
 
-            foreach(var file in files)
+            foreach (var file in files)
             {
-                var mnfLines = File.ReadAllLines(file);
-                string[] block;
-                int idx = 0;
-                PartType type;
-                string pckg = string.Empty;
-                while (idx != -1)
+                DataFile dataFile = new(file);
+                dataFile.Load();
+                foreach(var dt in dataFile.Data)
                 {
-                    (type, block, idx) = ParseBlock(ref mnfLines, idx, ref pckg);
-                    if (block.Length == 0) { continue; }
-                    Build(type, block, pckg);
+                    if (dt.Type == BlockType.DEF)
+                    {
+                        Build(DataKW.GetPartTypeId(dt.BlockName), dt.Data.ToArray(), dataFile.Package);
+                    }
                 }
             }
+        }
+
+        public Component Get<K>(string id)
+        {
+            Component ret = default;
+            id = id.ToUpper();
+
+            switch (typeof(K))
+            {
+                case Type t when t == typeof(Chassis): ret = ChassisDepot.GetValueOrDefault(id); break;
+                case Type t when t == typeof(PowerCell): ret = PowerDepot.GetValueOrDefault(id); break;
+                case Type t when t == typeof(Motor): ret = MotorDepot.GetValueOrDefault(id); break;
+                case Type t when t == typeof(Weapon): ret = WeaponDepot.GetValueOrDefault(id); break;
+                case Type t when t == typeof(CPU): ret = CpuDepot.GetValueOrDefault(id); break;
+                case Type t when t == typeof(Mem): ret = MemDepot.GetValueOrDefault(id); break;
+                case Type t when t == typeof(Utility): ret = UtilDepot.GetValueOrDefault(id); break;
+                case Type t when t == typeof(MotherBoard): ret = MoboDepot.GetValueOrDefault(id); break;
+            }
+
+            return ret;
         }
 
         public ComponentDepot() 
@@ -134,14 +164,6 @@ namespace KBot.Depots
 
             Load();
         }
-    }
-
-    public static class Depots
-    {
-        public static ComponentDepot __Components = null;
-
-        public static ComponentDepot Depot => __Components ??= new();
-
     }
 
 }
