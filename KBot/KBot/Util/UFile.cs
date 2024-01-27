@@ -49,7 +49,9 @@ namespace KBot.Util
         //Fab
         public const string FAB = "FAB";
         public const string PREFAB = "PREFAB";
-    
+        public const string BASE = "BASE";
+        public const string SUB = "SUB";
+
         public static bool Equals(string v1, string v2)
         {
             return v1.ToUpper() == v2.ToUpper();
@@ -82,6 +84,9 @@ namespace KBot.Util
                 case UTILITY: return PartType.Util;
                 case POWERCELL: return PartType.Power;
                 case WEAPON: return PartType.Weapon;
+
+                case PREFAB: return PartType.PreFab;
+
                 default: return PartType.Misc;
             }
         }
@@ -104,6 +109,8 @@ namespace KBot.Util
             private set { __value = value.Trim(); }
         }
 
+        public int[] Indices { get; private set; } = null;
+
         public KV(string kvString)
         {
             var trms = kvString.Split(new char[] { ' ', '=' }, 2).Select(x => x.Trim()).ToList();
@@ -113,7 +120,10 @@ namespace KBot.Util
 
         public KV(string key, string value)
         {
-            Key = key;
+            var ks = key.Split(new char[] { '[', ']' }, StringSplitOptions.RemoveEmptyEntries);
+            Indices = Array.ConvertAll(ks[1..ks.Length], x => int.Parse(x));
+
+            Key = ks[0];
             Value = value;
         }
 
@@ -201,10 +211,13 @@ namespace KBot.Util
 
     public static class UFile
     {
-        public static string GameDataDir { get => Path.Join(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName, "GameData"); }
+        public static string BaseDir { get => Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName; }
+        public static string StdAssetDir { get => Path.Join(BaseDir, "Content"); }
+        public static string GameDataDir { get => Path.Join(BaseDir, "GameData"); }
         public static string PartsDir { get => Path.Join(GameDataDir, "Parts"); }
         public static string SavesDir { get => Path.Join(GameDataDir, "Saves"); }
         public static string PreFabDir { get => Path.Join(GameDataDir, "Prefab"); }
+        public static string ModDir { get => Path.Join(GameDataDir, "Mod"); }
     }
 
     public static class DataFileUtil

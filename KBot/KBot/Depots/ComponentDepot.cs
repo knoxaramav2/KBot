@@ -131,24 +131,19 @@ namespace KBot.Depots
             }
         }
 
-        public Component Get<K>(string id)
+        public Component Get(string id)
         {
-            Component ret = default;
             id = id.ToUpper();
+            { if (ChassisDepot.TryGetValue(id, out var ret)) return ret.DeepCopy(); }
+            { if (PowerDepot.TryGetValue(id, out var ret)) return ret.DeepCopy(); }
+            { if (MotorDepot.TryGetValue(id, out var ret)) return ret.DeepCopy(); }
+            { if (WeaponDepot.TryGetValue(id, out var ret)) return ret.DeepCopy(); }
+            { if (CpuDepot.TryGetValue(id, out var ret)) return ret.DeepCopy(); }
+            { if (MemDepot.TryGetValue(id, out var ret)) return ret.DeepCopy(); }
+            { if (UtilDepot.TryGetValue(id, out var ret)) return ret.DeepCopy(); }
+            { if (MoboDepot.TryGetValue(id, out var ret)) return ret.DeepCopy(); }
 
-            switch (typeof(K))
-            {
-                case Type t when t == typeof(Chassis): ret = ChassisDepot.GetValueOrDefault(id); break;
-                case Type t when t == typeof(PowerCell): ret = PowerDepot.GetValueOrDefault(id); break;
-                case Type t when t == typeof(Motor): ret = MotorDepot.GetValueOrDefault(id); break;
-                case Type t when t == typeof(Weapon): ret = WeaponDepot.GetValueOrDefault(id); break;
-                case Type t when t == typeof(CPU): ret = CpuDepot.GetValueOrDefault(id); break;
-                case Type t when t == typeof(Mem): ret = MemDepot.GetValueOrDefault(id); break;
-                case Type t when t == typeof(Utility): ret = UtilDepot.GetValueOrDefault(id); break;
-                case Type t when t == typeof(MotherBoard): ret = MoboDepot.GetValueOrDefault(id); break;
-            }
-
-            return ret;
+            return null;
         }
 
         public ComponentDepot() 

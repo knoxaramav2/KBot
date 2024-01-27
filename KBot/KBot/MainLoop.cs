@@ -35,8 +35,8 @@ namespace KBot
             Providers.Init(_graphics, _drawCtx, Content);
 
             //Init depots
-            _ = Depots.ComponentDepot.Depots;
-            _ = Depots.FabDepot.Depots;
+            //_ = ComponentDepot.Depots;
+            _ = FabDepot.Depots;
 
             _mainMenu = new();
             _gameLoop = new();

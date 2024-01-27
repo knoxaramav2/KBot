@@ -1,12 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
-using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KBot.Util
 {
@@ -44,10 +41,11 @@ namespace KBot.Util
 
         public Images(ContentManager content)
         {
-            StandardImages = new List<string>
-            {
-                "Cross", "Box1", "DevShell1"
-            };
+            var exts = new[] { ".png", ".jpg", ".jpeg" };
+            StandardImages = Directory.GetFiles(UFile.StdAssetDir)
+                .Where(x => exts.Any(y => x.EndsWith(y, System.StringComparison.OrdinalIgnoreCase)))
+                .Select(x => Path.GetFileNameWithoutExtension(x))
+                .ToList();
 
             Storage = new();
 
@@ -63,7 +61,7 @@ namespace KBot.Util
         public static GraphicsDeviceManager Graphics { get; set; } = null;
         public static SpriteBatch DrawCtx { get; set; }
         public static Fonts Fonts { get; set; }
-        public static Images Images { get; set; }
+        public static Images Sprites { get; set; }
 
         public static void Init(
             GraphicsDeviceManager graphics, 
@@ -73,7 +71,7 @@ namespace KBot.Util
             Graphics = graphics;
             DrawCtx = batch;
             Fonts = new Fonts(content);
-            Images = new Images(content);
+            Sprites = new Images(content);
         }
     }
 }

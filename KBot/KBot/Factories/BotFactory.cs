@@ -10,8 +10,6 @@ namespace KBot.Factories
         {
             Size = size;
         }
-
-        
     }
 
     public static class Factories

@@ -1,0 +1,13 @@
+PCKG STD
+
+DEF CPU
+	#Component
+	COST=350
+	NAME=Dev CPU
+	DESC=Dev mode CPU
+	ID=DEVCPU
+	SPRITE=DevCPU
+	DIM=64,64
+	HEALTH=50
+	#new
+

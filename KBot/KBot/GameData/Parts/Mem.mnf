@@ -1,0 +1,13 @@
+PCKG STD
+
+DEF MEM
+	#Component
+	COST=200
+	NAME=Dev Mem
+	DESC=Dev mode mem
+	ID=DEVMEM
+	SPRITE=Mem
+	DIM=64,64
+	HEALTH=50
+	#new
+

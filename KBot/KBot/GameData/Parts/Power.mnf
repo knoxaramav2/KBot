@@ -1,1 +1,10 @@
 PCKG STD
+DEF CHASSIS
+	#Component
+	COST=80
+	NAME=Dev Shell
+	DESC=Dev mode chassis
+	ID=DEVPOWER
+	SPRITE=DevBat1
+	DIM=64,64
+	HEALTH=50
