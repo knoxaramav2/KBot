@@ -116,6 +116,18 @@
 /processorParam:TextureFormat=Compressed
 /build:Fonts.spritefont
 
+#begin HatDev.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:HatDev.png
+
 #begin Mem.png
 /importer:TextureImporter
 /processor:TextureProcessor

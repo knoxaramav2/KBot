@@ -9,25 +9,27 @@ namespace KBot.UI
     internal class GameLoop
     {
         private BotFactory Factory;
+        private ControlSystem CSystem;
+        private GameState State;
+
+        private GameCtxState RetVal;
 
         public GameLoop() {
-            var winSz = Providers.Graphics.GraphicsDevice.Viewport.Bounds.Size;
-            var center = new Point(winSz.X/2, winSz.Y/2);
-
+            CSystem = new();
             Factory = new BotFactory();
+            State = GameState.State;
+            RetVal = GameCtxState.NoChange;
         }
 
         public GameCtxState Update(KeyboardState kbst, MouseState mst)
         {
-            
-            //Bot.ActionIO(kbst, mst);
-
-            return GameCtxState.NoChange;
+            CSystem.Update(kbst, mst);
+            return RetVal;
         }
 
         public void Draw()
         {
-            //Bot.Draw();
+            CSystem.Draw();
         }
     }
 }

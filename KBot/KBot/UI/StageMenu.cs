@@ -25,9 +25,9 @@ namespace KBot.UI
 
         protected override void InitComponents()
         {
-            var botsBtn = new Button(text:"View Bots");
-            var statsBtn = new Button(text: "Stats");
-            var launchBtn = new Button(text: "Launch");
+            var botsBtn = new Button(this, text:"View Bots");
+            var statsBtn = new Button(this, text: "Stats");
+            var launchBtn = new Button(this, text: "Launch");
 
             Insert(statsBtn, new Point(0, 0));
             Insert(botsBtn, new Point(0, 2));

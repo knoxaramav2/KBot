@@ -3,7 +3,8 @@
     public enum GameCtxState 
     { 
         MainMenu, NewGame, LoadGame, Exit,
-        GameLoop, StageMenu, Pause, 
+        GameLoop, StageMenu, Pause,
+        HomeScreen,
         Settings, 
         NoChange 
     }

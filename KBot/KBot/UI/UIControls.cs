@@ -22,7 +22,7 @@ namespace KBot.UI
         public SpriteBatch DrawCtx;
         public Rectangle Dim;
 
-        protected Color Color;
+        protected Color CColor;
         protected Texture2D Image;
 
         protected Control Parent { get; private set; }
@@ -38,7 +38,7 @@ namespace KBot.UI
             DrawCtx = Providers.DrawCtx;
             Dim = new();
             Image = img;
-            Color = (Color)clr;
+            CColor = (Color)clr;
             Move(pos, size);
         }
 
@@ -60,13 +60,13 @@ namespace KBot.UI
         public virtual void SetBackground(Texture2D img=null, Color?clr=null)
         {
             if (img != null) { Image = img; }
-            if (clr != null) { Color = (Color)clr; }
+            if (clr != null) { CColor = (Color)clr; }
         }
 
         public virtual void Draw() {
             if (Image != null)
             {
-                DrawCtx.Draw(Image, Dim, Color);
+                DrawCtx.Draw(Image, Dim, CColor);
             }
         }
 
@@ -77,7 +77,7 @@ namespace KBot.UI
 
         public virtual void Config(Color? clr=null, Texture2D img=null)
         {
-            Color = clr ?? Color;
+            CColor = clr ?? CColor;
             Image = img ?? Image;
         }
 
@@ -131,6 +131,7 @@ namespace KBot.UI
             Align = align;
             Font = font ?? Providers.Fonts.Get();
             TextColor = txtClr ?? Color.White;
+            Image = Providers.Sprites.Get("Box1");
         }
 
         public override void Draw()
@@ -167,11 +168,50 @@ namespace KBot.UI
             Callback = callback;
         }
 
-        public virtual void OnKeyPress(Keys[] keys)
+        public virtual void OnKeyPress(Keys[] keys, bool shift = false, bool ctrl = false)
         {
             Debug.Write("KP: ");
             foreach (var key in keys)
             {
+                switch (key)
+                {
+                    case Keys.A:
+                    case Keys.B:
+                    case Keys.C:
+                    case Keys.D:
+                    case Keys.E:
+                    case Keys.F:
+                    case Keys.G:
+                    case Keys.H:
+                    case Keys.I:
+                    case Keys.J:
+                    case Keys.K:
+                    case Keys.L:
+                    case Keys.M:
+                    case Keys.N:
+                    case Keys.O:
+                    case Keys.P:
+                    case Keys.Q:
+                    case Keys.R:
+                    case Keys.S:
+                    case Keys.T:
+                    case Keys.U:
+                    case Keys.V:
+                    case Keys.W:
+                    case Keys.X:
+                    case Keys.Y:
+                    case Keys.Z:
+                        Text += shift ? key.ToString() : key.ToString().ToLower();
+                        break;
+                    case Keys.Space: Text += ' '; break;
+                    case Keys.Back:
+                        if (Text.Length > 0) { Text = Text.Remove(Text.Length-1); } 
+                        break;
+                    default: 
+                        break;
+
+                }
+
                 Debug.Write($"{key} | ");
             }
             Debug.WriteLine("");
@@ -184,24 +224,50 @@ namespace KBot.UI
         private Align Align { get; set; }
         private SpriteFont Font { get; set; }
         private Color TextColor { get; set; }
+        private bool FirstType { get; set; }
+        private Color PlaceholderColor { get; set; }
+        private string Placeholder { get; set; }
 
-        public TextField(Control parent = null, Texture2D bgImg = null,
+
+        public TextField(
+            Control parent = null, Texture2D bgImg = null,
             Color? bgClr = null, Point? pos = null, Point? size = null,
-            string text="", KeydownCallback callback = null,
+            string text = "", string placeholder = "", Color? placeholderColor=null,
+            KeydownCallback callback = null,
             Align align = Align.CC, SpriteFont font=null, Color? fgClr=null)
             : base(parent, bgImg, bgClr, pos, size, text, callback)
         {
-            Text = text;
+            Text = string.IsNullOrEmpty(text) ? 
+                string.IsNullOrEmpty(placeholder) ?
+                    string.Empty : placeholder
+                    : text;
             Align = align;
             Font = font ?? Providers.Fonts.Get();
             TextColor = fgClr ?? Color.White;
+            Placeholder = placeholder;
+            PlaceholderColor = placeholderColor ?? Color.LightGray;
+            Image = Providers.Sprites.Get("Box1");
+            FirstType = true;
+
+            if (!string.IsNullOrEmpty(placeholder)) { CColor = PlaceholderColor; }
         }
 
-        public override void OnKeyPress(Keys[] keys)
+        public override void OnKeyPress(Keys[] keys, bool shift = false, bool ctrl = false)
         {
+            if (FirstType && keys.Length > 0) { 
+                FirstType = false;
+                Text = string.Empty;
+                CColor = TextColor;
+            }
 
+            base.OnKeyPress(keys, shift, ctrl);
 
-            base.OnKeyPress(keys);
+            if (Text.Length == 0)
+            {
+                FirstType = true;
+                CColor = PlaceholderColor;
+                Text = Placeholder;
+            }
         }
 
         public override void Draw()
@@ -232,7 +298,7 @@ namespace KBot.UI
             ClickCallback clickCallback = null, ClickCallback releaseCallback = null) 
             : base(parent, baseImg, baseClr, pos, size)
         {
-            ReleasedColor = Color;
+            ReleasedColor = CColor;
             ReleasedImg = Image;
             PressedColor = pressClr ?? Color.DarkGray;
             PressedImg = pressImg ?? Image;
@@ -249,7 +315,7 @@ namespace KBot.UI
         public virtual void Click()
         {
             IsClicked = true;
-            Color = PressedColor;
+            CColor = PressedColor;
             Image = PressedImg;
             OnClick?.Invoke();
         }
@@ -257,7 +323,7 @@ namespace KBot.UI
         public virtual void Release()
         {
             IsClicked = false;
-            Color = ReleasedColor;
+            CColor = ReleasedColor;
             Image = ReleasedImg;
             OnRelease?.Invoke();
         }
@@ -414,6 +480,7 @@ namespace KBot.UI
     
         public void Pack()
         {
+            if (Items.Count == 0) { return; }
             switch (GeoType)
             {
                 case GeoTypes.COORD: PackCoord(); break;
@@ -557,6 +624,7 @@ namespace KBot.UI
                 if (!type.IsSubclassOf(typeof(Selectable)) || !item.Item.InBounds(mst.Position)) 
                     { continue; }
                 Current = (Selectable)item.Item;
+                Debug.WriteLine(Current);
                 var rand = new Random();
                 var nclr = new Color(rand.Next(255), rand.Next(255), rand.Next(255));
                 Current.Config(clr: nclr);
@@ -576,10 +644,12 @@ namespace KBot.UI
             if (Current == null ||
                 !Current.GetType().IsSubclassOf(typeof(Typeable)) ||
                 StateCheck.CheckKState() != PressState.Click) { return; }
-            ((Typeable)Current).OnKeyPress(kbst.GetPressedKeys());
+            bool shift = kbst.IsKeyDown(Keys.LeftShift);
+            bool ctrl = kbst.IsKeyDown(Keys.LeftControl);
+            ((Typeable)Current).OnKeyPress(kbst.GetPressedKeys(), shift, ctrl);
             
         }
 
-        protected virtual void InitComponents() { }
+        protected virtual void InitComponents() { Pack(); }
     }
 }

@@ -110,7 +110,7 @@ namespace KBot.Depots
                                 if (cmp == null) { Debug.WriteLine($"Missing base"); continue; }
                                 if (!curr.GetSlot(idx, out var slot)) 
                                     { Debug.WriteLine($"Missing slot: {curr.ID}.{idx} -> {rcmp.ID}"); continue; }
-                                if (!slot.SetPart(rcmp)) 
+                                if (!slot.SetPart(curr, rcmp)) 
                                     { Debug.WriteLine($"Failed to set part: {curr.ID}.{idx} -> {rcmp.ID}"); continue; }
                             }
 

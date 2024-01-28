@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Diagnostics;
+using KBot.State;
 
 namespace KBot
 {
@@ -16,9 +17,12 @@ namespace KBot
         private Texture2D shell;
 
         private GameCtxState _state;
-        private MainMenu _mainMenu;
-        private NewGameMenu _newMenu;
+        private Menu _currMenu;
+        //private MainMenu _mainMenu;
+        //private NewGameMenu _newMenu;
         private GameLoop _gameLoop;
+        //private GameState _gameState;
+        private HomeScreen _homeScreen;
 
         public MainLoop()
         {
@@ -30,16 +34,11 @@ namespace KBot
         protected override void Initialize()
         {
             Debug.WriteLine("STARTING...");
-            _state = GameCtxState.MainMenu;
             _drawCtx = new SpriteBatch(GraphicsDevice);
             Providers.Init(_graphics, _drawCtx, Content);
 
-            //Init depots
-            //_ = ComponentDepot.Depots;
-            _ = FabDepot.Depots;
-
-            _mainMenu = new();
-            _gameLoop = new();
+            _state = GameCtxState.LoadGame;
+            _currMenu = new LoadMenu();
 
             base.Initialize();
         }
@@ -61,19 +60,18 @@ namespace KBot
             switch (_state)
             {
                 case GameCtxState.MainMenu:
-                    res = _mainMenu.Update(kbst, mst);
-                    break;
                 case GameCtxState.NewGame:
-                    res = _newMenu.Update(kbst, mst);
-                    break;
                 case GameCtxState.LoadGame:
+                case GameCtxState.Pause:
+                case GameCtxState.Settings:
+                    res = _currMenu.Update(kbst, mst);
+                    break;
+
+                case GameCtxState.HomeScreen:
+                    res = _homeScreen.Update(kbst, mst);
                     break;
                 case GameCtxState.GameLoop:
                     res = _gameLoop.Update(kbst, mst);
-                    break;
-                case GameCtxState.Pause:
-                    break;
-                case GameCtxState.Settings:
                     break;
                 case GameCtxState.Exit:
                     Exit();
@@ -84,12 +82,13 @@ namespace KBot
             {
                 switch(res)
                 {
-                    case GameCtxState.MainMenu:    { _mainMenu = new(); break; }
-                    case GameCtxState.NewGame:     { _newMenu = new(); break; }
-                    case GameCtxState.LoadGame:    { res = GameCtxState.MainMenu; break; }
-                    case GameCtxState.GameLoop:    { _gameLoop = new(); break; }
-                    case GameCtxState.Pause:       { res = GameCtxState.MainMenu; break; }
-                    case GameCtxState.Settings:    { res = GameCtxState.MainMenu; break; }
+                    case GameCtxState.MainMenu: { _currMenu = new MainMenu(); break; }
+                    case GameCtxState.NewGame:  { _currMenu = new NewGameMenu(); break; }
+                    case GameCtxState.LoadGame: { _currMenu = new LoadMenu(); break; }
+                    case GameCtxState.GameLoop: { _gameLoop = new GameLoop(); break; }
+                    case GameCtxState.HomeScreen: { _homeScreen = new HomeScreen(); break; }
+                    case GameCtxState.Pause:    { _currMenu = new MainMenu(); break; }
+                    case GameCtxState.Settings: { _currMenu = new MainMenu(); break; }
                     default:
                         Debug.WriteLine($">>> {res}");
                         break;
@@ -110,19 +109,19 @@ namespace KBot
             switch (_state)
             {
                 case GameCtxState.MainMenu:
-                    _mainMenu.Draw();
-                    break;
                 case GameCtxState.NewGame:
-                    _newMenu.Draw();
-                    break;
                 case GameCtxState.LoadGame:
+                case GameCtxState.Pause:
+                case GameCtxState.Settings:
+                    _currMenu.Draw();
+                    break;
+
+                case GameCtxState.HomeScreen:
+                    _homeScreen.Draw();
                     break;
                 case GameCtxState.GameLoop:
                     _gameLoop.Draw();
                     break;
-                case GameCtxState.Pause: 
-                    break;
-                
             }
                 
             _drawCtx.End();

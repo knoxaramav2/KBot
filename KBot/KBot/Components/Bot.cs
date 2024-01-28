@@ -11,12 +11,12 @@ namespace KBot.Components
 
     }
 
-    internal class Bot : IBot
+    public class Bot : IBot
     {
-        string Name;
-        string ID;
-        string Package;
-        Component Base;
+        public string Name;
+        public string ID;
+        public string Package;
+        public Component Base;
 
         private Bot() { }
 

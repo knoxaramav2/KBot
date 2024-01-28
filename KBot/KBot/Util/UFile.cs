@@ -216,6 +216,7 @@ namespace KBot.Util
         public static string GameDataDir { get => Path.Join(BaseDir, "GameData"); }
         public static string PartsDir { get => Path.Join(GameDataDir, "Parts"); }
         public static string SavesDir { get => Path.Join(GameDataDir, "Saves"); }
+        public static string TemplateDir { get => Path.Join(GameDataDir, "Templates"); }
         public static string PreFabDir { get => Path.Join(GameDataDir, "Prefab"); }
         public static string ModDir { get => Path.Join(GameDataDir, "Mod"); }
     }

@@ -1,12 +1,15 @@
 ﻿using KBot.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Xml.Serialization;
+using System.Xml.XPath;
 
 namespace KBot.Components
 {
@@ -22,11 +25,12 @@ namespace KBot.Components
     public class Slot
     {
         public Component Part { get; set; }
-        public PartType[] AllowedTypes { get; private set; }
-        public bool SetPart(Component part)
+        public PartType[] AllowedTypes { get; set; }
+        public bool SetPart(Component parent, Component part)
         {
             if (AllowedTypes.Contains(PartType.Misc) || AllowedTypes.Any(x => x == part.Type))
             {
+                part.Parent = parent;
                 Part = part;
                 return true;
             }
@@ -43,25 +47,27 @@ namespace KBot.Components
 
     public class Component
     {
-        public string Package { get; protected set; }
-        public string ID { get; protected set; }
-        public string DisplayName { get; protected set; }
-        public string Description { get; protected set; }
-        public int Cost { get; protected set; }
-        public PartType Type { get; protected set; }
-        public Point Size { get; protected set; }
-        public Texture2D Sprite { get; protected set; }
-        public List<Slot> SubComponents { get; protected set; }
-        public Component Parent { get; protected set; }
+        public string Package { get;  set; }
+        public string ID { get;  set; }
+        public string DisplayName { get;  set; }
+        public string Description { get;  set; }
+        public int Cost { get;  set; }
+        public PartType Type { get;  set; }
+        public Point Size { get;  set; }
+        public string SpriteName { get; set; }
+        [JsonIgnore]
+        public Texture2D Sprite { get;  set; }
+        public List<Slot> SubComponents { get;  set; }
+        public Component Parent { get;  set; }
         public int Health;
 
-        private Component() { }
+        public Component() { }
 
         public Component(
             Component parent,
             string id, string package, int cost, int health,
             PartType ptype, Point size, 
-            Texture2D sprite,
+            string spriteName,
             Slot[] attachPoints
             ) 
         {
@@ -72,7 +78,8 @@ namespace KBot.Components
             Health = health;
             Type = ptype; 
             Size = size;
-            Sprite = sprite;
+            SpriteName = spriteName;
+            Sprite = Providers.Sprites.Get(spriteName);
             SubComponents = attachPoints.ToList();
         }
 
@@ -91,6 +98,7 @@ namespace KBot.Components
             if (SubComponents[idx].AllowedTypes.Any(x => x == component.Type) ||
                  SubComponents[idx].AllowedTypes.Contains(PartType.Misc))
                 { return AttachErr.Invalid; }
+            component.Parent = this;
             SubComponents[idx] = new Slot(component, SubComponents[idx].AllowedTypes);
 
             return AttachErr.OK; 
@@ -117,7 +125,10 @@ namespace KBot.Components
                     case DataKW.NAME: DisplayName = kv.Value; break;
                     case DataKW.DESC: Description = kv.Value; break;
                     case DataKW.ID: ID = kv.Value; break;
-                    case DataKW.SPRITE: Sprite = Providers.Sprites.Get(kv.Value); break;
+                    case DataKW.SPRITE:
+                        SpriteName = kv.Value;
+                        Sprite = Providers.Sprites.Get(kv.Value); 
+                        break;
                     case DataKW.DIM:
                         {
                             var wh = PartDim(kv.Value);
@@ -164,6 +175,7 @@ namespace KBot.Components
             clone.Cost = Cost;
             clone.Type = Type;
             clone.Size = new Point(Size.X, Size.Y);
+            clone.SpriteName = SpriteName;
             clone.Sprite = Sprite;
             clone.SubComponents = SubComponents
                 .Select(x => new Slot((Component)x.Part?.DeepCopy(), x.AllowedTypes))
@@ -178,8 +190,8 @@ namespace KBot.Components
     public class Chassis : Component
     {
         public Chassis(Component parent, string id, string package, int cost, int health,
-            Point size, Texture2D sprite, Slot[] attachPoints) 
-            : base(parent, id, package, cost, health, PartType.Chassis, size, sprite, attachPoints)
+            Point size, string spriteName, Slot[] attachPoints) 
+            : base(parent, id, package, cost, health, PartType.Chassis, size, spriteName, attachPoints)
         {
         }
 
@@ -192,7 +204,7 @@ namespace KBot.Components
         }
 
         public Chassis(KV[] data, string package) : base(null, string.Empty, string.Empty, 0, 0,
-            PartType.Chassis, new Point(), null, Array.Empty<Slot>())
+            PartType.Chassis, new Point(), string.Empty, Array.Empty<Slot>())
         {
             Package = package;
             Load(data);
@@ -210,13 +222,13 @@ namespace KBot.Components
     public class Motor : Component
     {
         public Motor(Component parent, string id, string package, int cost, int health, 
-            Point size, Texture2D sprite, Slot[] attachPoints) 
-            : base(parent, id, package, cost, health, PartType.Motor, size, sprite, attachPoints)
+            Point size, string spriteName, Slot[] attachPoints) 
+            : base(parent, id, package, cost, health, PartType.Motor, size, spriteName, attachPoints)
         {
         }
 
         public Motor(KV[] data, string package) : base(null, string.Empty, string.Empty, 0, 0,
-            PartType.Motor, new Point(), null, Array.Empty<Slot>())
+            PartType.Motor, new Point(), string.Empty, Array.Empty<Slot>())
         {
             Package = package;
             Load(data);
@@ -234,13 +246,13 @@ namespace KBot.Components
     public class PowerCell : Component
     {
         public PowerCell(Component parent, string id, string package, int cost, int health, 
-            Point size, Texture2D sprite, Slot[] attachPoints) 
-            : base(parent, id, package, cost, health, PartType.Power, size, sprite, attachPoints)
+            Point size, string spriteName, Slot[] attachPoints) 
+            : base(parent, id, package, cost, health, PartType.Power, size, spriteName, attachPoints)
         {
         }
 
         public PowerCell(KV[] data, string package) : base(null, string.Empty, string.Empty, 0, 0,
-            PartType.Power, new Point(), null, Array.Empty<Slot>())
+            PartType.Power, new Point(), string.Empty, Array.Empty<Slot>())
         {
             Package = package;
             Load(data);
@@ -258,13 +270,13 @@ namespace KBot.Components
     public class Utility : Component
     {
         public Utility(Component parent, string id, string package, int cost, int health, 
-            Point size, Texture2D sprite, Slot[] attachPoints) 
-            : base(parent, id, package, cost, health, PartType.Util, size, sprite, attachPoints)
+            Point size, string spriteName, Slot[] attachPoints) 
+            : base(parent, id, package, cost, health, PartType.Util, size, spriteName, attachPoints)
         {
         }
 
         public Utility(KV[] data, string package) : base(null, string.Empty, string.Empty, 0, 0,
-            PartType.Util, new Point(), null, Array.Empty<Slot>())
+            PartType.Util, new Point(), string.Empty, Array.Empty<Slot>())
         {
             Package = package;
             Load(data);
@@ -282,13 +294,13 @@ namespace KBot.Components
     public class Weapon : Component
     {
         public Weapon(Component parent, string id, string package, int cost, int health, 
-            Point size, Texture2D sprite, Slot[] attachPoints) 
-            : base(parent, id, package, cost, health, PartType.Weapon, size, sprite, attachPoints)
+            Point size, string spriteName, Slot[] attachPoints) 
+            : base(parent, id, package, cost, health, PartType.Weapon, size, spriteName, attachPoints)
         {
         }
 
         public Weapon(KV[] data, string package) : base(null, string.Empty, string.Empty, 0, 0,
-            PartType.Weapon, new Point(), null, Array.Empty<Slot>())
+            PartType.Weapon, new Point(), string.Empty, Array.Empty<Slot>())
         {
             Package = package;
             Load(data);
@@ -306,13 +318,13 @@ namespace KBot.Components
     public class CPU : Component
     {
         public CPU(Component parent, string id, string package, int cost, int health, 
-            Point size, Texture2D sprite, Slot[] attachPoints) 
-            : base(parent, id, package, cost, health, PartType.CPU, size, sprite, attachPoints)
+            Point size, string spriteName, Slot[] attachPoints) 
+            : base(parent, id, package, cost, health, PartType.CPU, size, spriteName, attachPoints)
         {
         }
 
         public CPU(KV[] data, string package) : base(null, string.Empty, string.Empty, 0, 0,
-            PartType.CPU, new Point(), null, Array.Empty<Slot>())
+            PartType.CPU, new Point(), string.Empty, Array.Empty<Slot>())
         {
             Package = package;
             Load(data);
@@ -330,13 +342,13 @@ namespace KBot.Components
     public class Mem : Component
     {
         public Mem(Component parent, string id, string package, int cost, int health, 
-            Point size, Texture2D sprite, Slot[] attachPoints) 
-            : base(parent, id, package, cost, health, PartType.Mem, size, sprite, attachPoints)
+            Point size, string spriteName, Slot[] attachPoints) 
+            : base(parent, id, package, cost, health, PartType.Mem, size, spriteName, attachPoints)
         {
         }
 
         public Mem(KV[] data, string package) : base(null, string.Empty, string.Empty, 0, 0,
-            PartType.Mem, new Point(), null, Array.Empty<Slot>())
+            PartType.Mem, new Point(), string.Empty, Array.Empty<Slot>())
         {
             Package = package;
             Load(data);
@@ -354,13 +366,13 @@ namespace KBot.Components
     public class MotherBoard : Component
     {
         public MotherBoard(Component parent, string id, string package, int cost, int health,
-            Point size, Texture2D sprite, Slot[] attachPoints)
-            : base(parent, id, package, cost, health, PartType.Mobo, size, sprite, attachPoints)
+            Point size, string spriteName, Slot[] attachPoints)
+            : base(parent, id, package, cost, health, PartType.Mobo, size, spriteName, attachPoints)
         {
         }
 
         public MotherBoard(KV[] data, string package) : base(null, string.Empty, string.Empty, 0, 0,
-            PartType.Mobo, new Point(), null, Array.Empty<Slot>())
+            PartType.Mobo, new Point(), string.Empty, Array.Empty<Slot>())
         {
             Package = package;
             Load(data);

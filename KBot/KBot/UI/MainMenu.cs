@@ -33,7 +33,7 @@ namespace KBot.UI
             Insert(sttBtn, new Point(0, 2));
             Insert(exitBtn, new Point(0, 3));
 
-            Pack();
+            base.InitComponents();
         }
 
         public MainMenu() : base(GeoTypes.GRID, margin:new Point(1,1)) {

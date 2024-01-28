@@ -13,36 +13,59 @@ namespace KBot.UI
     {
         readonly SpriteFont Font;
         private GameCtxState RetVal;
+
+        private bool ValidValues = false;
         private string SaveName;
-        private string TestVal;
+        private string PlayerName;
+
+        private bool Validate()
+        {
+            ValidValues = !string.IsNullOrEmpty(SaveName) && !string.IsNullOrEmpty(PlayerName);
+            return ValidValues;
+        }
 
         private void InitGameData()
         {
-            Debug.WriteLine($">>>> {TestVal}");
-            var gameData = GameState.State;
-            SaveName = "Test.sav";
-            gameData.SaveName = SaveName;
+            Debug.WriteLine($">>>> {PlayerName}");
+            Debug.WriteLine($">>>> {SaveName}");
+
+            if (!Validate())
+            {
+
+                return;
+            }
+
+            var gameData = GameState.NewGame(SaveName, PlayerName);
             gameData.Save();
+            RetVal = GameCtxState.HomeScreen;
         }
 
         protected override void InitComponents()
         {
-            TextField nameField = new(text: "<Name>", 
+            Label gameLbl = new Label(text:"Save Name: ");
+            TextField gameNameField = new(placeholder: "<Name>", 
                 bgClr: Color.LightGray, fgClr: Color.Cyan,
-                callback: (string nval) => { TestVal = nval; });
+                callback: (string nval) => { SaveName = nval; });
+            Label playerLbl = new Label(text: "Player Name: ");
+            TextField playerNameField = new(placeholder: "<Name>",
+                bgClr: Color.LightGray, fgClr: Color.Cyan,
+                callback: (string nval) => { PlayerName = nval; });
+            
             Button startBtn = new(text: "Start",
-                clickCallback: () => { Debug.WriteLine("START"); RetVal = GameCtxState.GameLoop; InitGameData(); },
+                clickCallback: () => { Debug.WriteLine("START"); InitGameData(); },
                 releaseCallback: () => Debug.WriteLine("RELEASE"));
-
             Button cancelBtn = new(text: "Cancel",
                 clickCallback: () => { Debug.WriteLine("CANCEL"); RetVal = GameCtxState.MainMenu; },
                 releaseCallback: () => Debug.WriteLine("RELEASE"));
 
-            Insert(nameField, new Point(1, 0));
-            Insert(startBtn, new Point(0, 1));
-            Insert(cancelBtn, new Point(2, 1));
+            Insert(gameLbl, new Point(0, 0));
+            Insert(gameNameField, new Point(1, 0));
+            Insert(playerLbl, new Point(0, 1));
+            Insert(playerNameField, new Point(1, 1));
+            Insert(startBtn, new Point(0, 2));
+            Insert(cancelBtn, new Point(2, 2));
 
-            Pack();
+            base.InitComponents();
         }
 
         public NewGameMenu() : base(GeoTypes.GRID, margin: new Point(1, 1))
