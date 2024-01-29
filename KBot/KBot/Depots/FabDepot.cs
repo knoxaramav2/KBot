@@ -19,55 +19,6 @@ namespace KBot.Depots
         private Dictionary<string, Bot> BotDepot;
         private ComponentDepot CompDepot;
 
-        private (PartType type, string[], int) ParseBlock(ref string[] list, int idx, ref string package)
-        {
-            PartType type = PartType.Misc;
-            var ret = new List<string>();
-
-            for (; idx < list.Length; ++idx)
-            {
-                var ln = list[idx].Trim();
-                if (string.IsNullOrEmpty(ln) || ln.StartsWith('#'))
-                    continue;
-                var trms = ln.Split(new char[] { ' ', '=' }, 2).Select(x => x.Trim()).ToList();
-
-                if (trms.Count != 2)
-                {
-                    Debug.WriteLine($"WRN: Invalid MSF line:\n\t{ln}");
-                    continue;
-                }
-
-                var key = trms[0].ToUpper();
-                var value = trms[1];
-
-                if (key == "PCKG") { package = value; }
-                else if (key == "DEF")
-                {
-                    if (type != PartType.Misc) { break; }
-                    value = value.ToUpper();
-                    switch (value)
-                    {
-                        case "CHASSIS": type = PartType.Chassis; break;
-                        case "CPU": type = PartType.CPU; break;
-                        case "MEM": type = PartType.Mem; break;
-                        case "MOTOR": type = PartType.Motor; break;
-                        case "POWER": type = PartType.Power; break;
-                        case "UTIL": type = PartType.Util; break;
-                        case "WEAPON": type = PartType.Weapon; break;
-                        case "MOBO": type = PartType.Mobo; break;
-                        default:
-                            Debug.WriteLine($"WRN: Invalid MNF part type\n\t{ln}");
-                            break;
-                    }
-                }
-                else { ret.Add(ln); }
-            }
-
-            if (idx == list.Length || type == PartType.Misc) { idx = -1; }
-
-            return (type, ret.ToArray(), idx);
-        }
-
         private void ReadManifest(PartType type, KV[] block, string pckg)
         {
             Component cmp = null;

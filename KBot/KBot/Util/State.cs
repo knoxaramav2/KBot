@@ -6,6 +6,7 @@
         GameLoop, StageMenu, Pause,
         HomeScreen,
         Settings, 
+        DevBox,
         NoChange 
     }
 }

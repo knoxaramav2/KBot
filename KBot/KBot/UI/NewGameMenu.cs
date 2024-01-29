@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace KBot.UI
 {
-    public class NewGameMenu : Menu
+    public class NewGameMenu : Menu, IControlLoop
     {
         readonly SpriteFont Font;
         private GameCtxState RetVal;

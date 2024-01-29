@@ -34,10 +34,10 @@ namespace KBot.State
             Avatar = null;
         }
 
-        private GameState(string gameName, string playerName, bool devmode=false) 
+        private GameState(string gameName, string playerName) 
         {
             SaveName = gameName;
-            Player = new PlayerState(devmode)
+            Player = new PlayerState()
             {
                 Name = playerName,
                 BotInventory = { Depots.FabDepot.Depots.Get("DevBot") }
@@ -55,6 +55,19 @@ namespace KBot.State
             return Load(gameName, false);
         }
 
+        private void RectifyState()
+        {
+            foreach(var part in Player.PartInventory)
+            {
+                part.RectifyLoadState();
+            }
+
+            foreach(var bot in Player.BotInventory)
+            {
+                bot.Base?.RectifyLoadState();
+            }
+        }
+
         private static GameState Load(string gameName, bool fromTemplate)
         {
             gameName = Path.HasExtension(gameName) ? gameName : gameName + ".sav";
@@ -70,6 +83,7 @@ namespace KBot.State
             var raw = File.ReadAllText(path);
 
             GameState loadState = JsonConvert.DeserializeObject<GameState>(raw);
+            loadState.RectifyState();
             if (loadState == null)
             {
                 Debug.WriteLine($"ERR: Failed to load {gameName}");

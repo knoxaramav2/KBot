@@ -17,11 +17,11 @@ namespace KBot.State
         public List<Component> PartInventory;
         public List<Bot> BotInventory;
 
-        public PlayerState(bool devmode= false) {
+        public PlayerState() {
             PartInventory = new();
             BotInventory = new();
 
-            if (devmode)
+            if (Config.DevMode)
             {
                 BotInventory.Add(Depots.FabDepot.Depots.Get("DEVBOT"));
             }

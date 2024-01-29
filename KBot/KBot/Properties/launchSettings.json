@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "KBot": {
+      "commandName": "Project",
+      "commandLineArgs": "--dev"
+    }
+  }
+}

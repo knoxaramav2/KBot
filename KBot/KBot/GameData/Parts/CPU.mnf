@@ -7,7 +7,7 @@ DEF CPU
 	DESC=Dev mode CPU
 	ID=DEVCPU
 	SPRITE=DevCPU
-	DIM=64,64
+	DIM=16,16
 	HEALTH=50
 	#new
 

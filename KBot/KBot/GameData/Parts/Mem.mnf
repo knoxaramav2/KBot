@@ -7,7 +7,7 @@ DEF MEM
 	DESC=Dev mode mem
 	ID=DEVMEM
 	SPRITE=Mem
-	DIM=64,64
+	DIM=32,32
 	HEALTH=50
 	#new
 

@@ -1,14 +1,12 @@
-﻿using KBot.Factories;
-using KBot.State;
+﻿using KBot.State;
 using KBot.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 namespace KBot.UI
 {
-    internal class GameLoop
+    internal class GameLoop : IControlLoop
     {
-        private BotFactory Factory;
         private ControlSystem CSystem;
         private GameState State;
 
@@ -16,7 +14,6 @@ namespace KBot.UI
 
         public GameLoop() {
             CSystem = new();
-            Factory = new BotFactory();
             State = GameState.State;
             RetVal = GameCtxState.NoChange;
         }

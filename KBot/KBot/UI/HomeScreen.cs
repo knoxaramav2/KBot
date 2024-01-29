@@ -22,7 +22,7 @@ namespace KBot.UI
         World, Exit
     }
 
-    public class HomeScreen
+    public class HomeScreen : IControlLoop
     {
         HomeMenuType Type;
         GameCtxState RetVal;
@@ -100,13 +100,22 @@ namespace KBot.UI
             RetVal = HomeMenuType.World;
         }
 
+        private void LaunchCompetition()
+        {
+            var player = GameState.State.Player;
+            var bot = player.BotInventory.First();
+            var ebot = new BotEntity(bot, UIO.ScreenCenter);
+            GameState.State.Avatar = ebot;
+            RetVal = HomeMenuType.World;
+        }
+
         protected override void InitComponents()
         {
             var nameLbl = new Label(this, text: GameState.State.Player.Name);
 
             var invBtn = new Button(this, text:"Inventory");
             var buildBtn = new Button(this, text: "Build Bot");
-            var compBtn = new Button(this, text: "Competition");
+            var compBtn = new Button(this, text: "Competition", clickCallback: () => LaunchCompetition());
             var worldBtn = new Button(this, text: "World", clickCallback: () => LaunchWorld());
             var exit = new Button(this, text: "Exit",
                 clickCallback: () => { RetVal = HomeMenuType.Exit; }

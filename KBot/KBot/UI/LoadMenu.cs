@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace KBot.UI
 {
-    public class LoadMenu : Menu
+    public class LoadMenu : Menu, IControlLoop
     {
         GameCtxState RetVal;
         string SelectPath;

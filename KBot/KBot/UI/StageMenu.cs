@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace KBot.UI
 {
-    internal class StageMenu : Menu
+    internal class StageMenu : Menu, IControlLoop
     {
         GameCtxState RetVal;
 

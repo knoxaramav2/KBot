@@ -26,6 +26,7 @@ namespace KBot.Components
     {
         public Component Part { get; set; }
         public PartType[] AllowedTypes { get; set; }
+        public Point Offset { get; set; }
         public bool SetPart(Component parent, Component part)
         {
             if (AllowedTypes.Contains(PartType.Misc) || AllowedTypes.Any(x => x == part.Type))
@@ -38,10 +39,11 @@ namespace KBot.Components
             return false;
         }
 
-        public Slot(Component part, PartType[] types)
+        public Slot(Component part, PartType[] types, Point offset)
         {
             Part = part;
             AllowedTypes = types;
+            Offset = offset;
         }
     }
 
@@ -83,31 +85,37 @@ namespace KBot.Components
             SubComponents = attachPoints.ToList();
         }
 
-        public enum AttachErr
-        {
-            OK, Occupied, Invalid
+        public void RectifyLoadState() 
+        { 
+            Sprite ??= Providers.Sprites.Get(SpriteName);
+            foreach(var sb in SubComponents) { sb.Part?.RectifyLoadState(); }
         }
 
-        public AttachErr Attach(Component component, int idx, bool replace=false)
-        {
-            if (idx < 0 || idx >= SubComponents.Count){
-                throw new System.Exception("Out of bounds");
-            }
+        //public enum AttachErr
+        //{
+        //    OK, Occupied, Invalid
+        //}
 
-            if (SubComponents[idx].Part != null && !replace) { return AttachErr.Occupied; }
-            if (SubComponents[idx].AllowedTypes.Any(x => x == component.Type) ||
-                 SubComponents[idx].AllowedTypes.Contains(PartType.Misc))
-                { return AttachErr.Invalid; }
-            component.Parent = this;
-            SubComponents[idx] = new Slot(component, SubComponents[idx].AllowedTypes);
+        //public AttachErr Attach(Component component, int idx, bool replace=false)
+        //{
+        //    if (idx < 0 || idx >= SubComponents.Count){
+        //        throw new System.Exception("Out of bounds");
+        //    }
 
-            return AttachErr.OK; 
-        }
+        //    if (SubComponents[idx].Part != null && !replace) { return AttachErr.Occupied; }
+        //    if (SubComponents[idx].AllowedTypes.Any(x => x == component.Type) ||
+        //         SubComponents[idx].AllowedTypes.Contains(PartType.Misc))
+        //        { return AttachErr.Invalid; }
+        //    component.Parent = this;
+        //    SubComponents[idx] = new Slot(component, SubComponents[idx].AllowedTypes, new Point());
 
-        protected (int, int) PartDim(string value)
+        //    return AttachErr.OK; 
+        //}
+
+        protected (int, int) IntPair(string value)
         {
             var dv = value.Split(',');
-            if (dv.Length != 2 || !int.TryParse(dv[0], out int w) || !int.TryParse(dv[0], out int h))
+            if (dv.Length != 2 || !int.TryParse(dv[0], out int w) || !int.TryParse(dv[1], out int h))
                 return (0, 0);
             return (w, h);
         }
@@ -131,17 +139,17 @@ namespace KBot.Components
                         break;
                     case DataKW.DIM:
                         {
-                            var wh = PartDim(kv.Value);
+                            var wh = IntPair(kv.Value);
                             Size = new Point(wh.Item1, wh.Item2);
                         }
                         break;
                     case DataKW.ATTACH:
                         {
                             var sVals = kv.Value.Split(':');
-                            var wh = PartDim(sVals[0]);
+                            var offset = IntPair(sVals[0]);
                             var types = sVals[1].Split('|');
                             var typeCodes = types.Select(x => DataKW.GetPartTypeId(x)).ToArray();
-                            SubComponents.Add(new Slot(null, typeCodes));
+                            SubComponents.Add(new Slot(null, typeCodes, new Point(offset.Item1, offset.Item2)));
                         }
                         break;
                 }
@@ -166,22 +174,23 @@ namespace KBot.Components
 
         public virtual Component DeepCopy()
         {
-            var clone = new Component();
-
-            clone.Package = Package;
-            clone.ID = ID;
-            clone.DisplayName = DisplayName;
-            clone.Description = Description;
-            clone.Cost = Cost;
-            clone.Type = Type;
-            clone.Size = new Point(Size.X, Size.Y);
-            clone.SpriteName = SpriteName;
-            clone.Sprite = Sprite;
-            clone.SubComponents = SubComponents
-                .Select(x => new Slot((Component)x.Part?.DeepCopy(), x.AllowedTypes))
-                .ToList();
-            clone.Parent = Parent;
-            clone.Health = Health;
+            var clone = new Component
+            {
+                Package = Package,
+                ID = ID,
+                DisplayName = DisplayName,
+                Description = Description,
+                Cost = Cost,
+                Type = Type,
+                Size = new Point(Size.X, Size.Y),
+                SpriteName = SpriteName,
+                Sprite = Sprite,
+                SubComponents = SubComponents
+                .Select(x => new Slot(x.Part?.DeepCopy(), x.AllowedTypes, x.Offset))
+                .ToList(),
+                Parent = Parent,
+                Health = Health
+            };
 
             return clone;
         }

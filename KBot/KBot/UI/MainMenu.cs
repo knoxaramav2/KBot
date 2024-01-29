@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace KBot.UI
 {
-    public class MainMenu : Menu
+    public class MainMenu : Menu, IControlLoop
     {
         readonly SpriteFont Font;
         private GameCtxState RetVal;
