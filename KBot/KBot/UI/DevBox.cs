@@ -38,7 +38,7 @@ namespace KBot.UI
         public GameCtxState Update(KeyboardState kbst, MouseState mst)
         {
             ebot.ActionIO(kbst, mst);
-
+            ebot.Update();
             if (kbst.IsKeyDown(Keys.Escape)) { RetVal = GameCtxState.MainMenu; }
 
             return RetVal;
