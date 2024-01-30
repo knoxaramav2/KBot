@@ -10,10 +10,10 @@ namespace KBot.UI
 {
     internal class DevBox : IControlLoop
     {
-        BotEntity ebot;
+        readonly BotEntity ebot;
         GameCtxState RetVal;
-        SpriteBatch DrawCtx;
-        Texture2D CenterX;
+        readonly SpriteBatch DrawCtx;
+        readonly Texture2D CenterX;
         Rectangle Center;
 
         public DevBox() {

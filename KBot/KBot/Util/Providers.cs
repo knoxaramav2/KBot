@@ -9,7 +9,7 @@ namespace KBot.Util
 {
     public class Fonts
     {
-        private Dictionary<string, SpriteFont> __fonts;
+        private readonly Dictionary<string, SpriteFont> __fonts;
         public Fonts(Microsoft.Xna.Framework.Content.ContentManager content) {
             __fonts = new Dictionary<string, SpriteFont>
             {
@@ -25,8 +25,8 @@ namespace KBot.Util
 
     public class Images
     {
-        private Dictionary<string, Texture2D> Storage;
-        private List<string> StandardImages;
+        private readonly Dictionary<string, Texture2D> Storage;
+        private readonly List<string> StandardImages;
 
         public Texture2D Get(string name)
         {

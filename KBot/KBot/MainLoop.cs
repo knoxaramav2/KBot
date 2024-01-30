@@ -11,7 +11,7 @@ namespace KBot
 {
     public class MainLoop : Game
     {
-        private GraphicsDeviceManager _graphics;
+        private readonly GraphicsDeviceManager _graphics;
         private SpriteBatch _drawCtx;
         private GameCtxState _state;
         private IControlLoop _currMenu;

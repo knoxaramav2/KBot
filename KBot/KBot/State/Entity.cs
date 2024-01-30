@@ -17,12 +17,13 @@ namespace KBot.State
         public Texture2D Sprite;
         public Color Color;
         public float Scale;
-
-        public DrawableInfo(Texture2D sprite, Color color, float scale)
+        public float Opacity;
+        public DrawableInfo(Texture2D sprite, Color color, float scale, float opacity=1f)
         {
             Sprite = sprite;
             Color = color;
             Scale = scale;
+            Opacity = opacity;
         }
     }
 
@@ -168,7 +169,6 @@ namespace KBot.State
         protected SpriteBatch DrawCtx;
         protected Rectangle Window;
         protected DrawableInfo DrawInfo;
-        private static readonly Vector2 ZeroOrigin = new Vector2(0,0);
         protected bool NoRender;
 
         DrawableInfo IDrawable.DrawInfo { get; set; }
@@ -183,30 +183,25 @@ namespace KBot.State
             Graphics = Providers.Graphics;
             DrawCtx = Providers.DrawCtx;
             Window = Graphics.GraphicsDevice.PresentationParameters.Bounds;
-            if (!norender) { DrawInfo = new(sprite, clr, size.X / sprite.Width); }
             NoRender = norender;
+            DrawInfo = new(sprite, clr, size.X / sprite.Width);
         }
 
         public virtual void Draw()
         {
-            if (NoRender) 
-                { return; }
+            if (NoRender) { return; }
             var top = BaseBody();
-            var pos = AbsPos();
             var src = new Rectangle(0, 0, DrawInfo.Sprite.Width, DrawInfo.Sprite.Height);
             var rot = top.Pos.Angle;
             var scale = (float)Math.Sqrt(BBox.Width * BBox.Height / (double)(DrawInfo.Sprite.Width * DrawInfo.Sprite.Height));
             var org = new Vector2(top.BBox.Width / 2 / scale, top.BBox.Height / 2 / scale);
-            var whiteRectangle = new Texture2D(Graphics.GraphicsDevice, 1, 1);
-            whiteRectangle.SetData<Color>(new Color[] { Color.White });
 
             if (ParentBody != null) { org += Pos.ToVector2(); }
 
-            float opac = 1.0f;
             DrawCtx.Draw(
                 DrawInfo.Sprite,
                 top.Pos.ToVector2(), src,
-                DrawInfo.Color*opac, (float)rot,
+                DrawInfo.Color*DrawInfo.Opacity, (float)rot,
                 org, scale,
                 SpriteEffects.None, 1f);
         }

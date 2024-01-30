@@ -7,10 +7,10 @@ namespace KBot.UI
 {
     internal class GameLoop : IControlLoop
     {
-        private ControlSystem CSystem;
-        private GameState State;
+        private readonly ControlSystem CSystem;
+        private readonly GameState State;
 
-        private GameCtxState RetVal;
+        private readonly GameCtxState RetVal;
 
         public GameLoop() {
             CSystem = new();

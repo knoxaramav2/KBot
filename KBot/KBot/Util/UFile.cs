@@ -18,7 +18,7 @@ namespace KBot.Util
 
     public class DataKW
     {
-        private static string[] BlockKW = { DEF };
+        private static readonly string[] BlockKW = { DEF };
 
         //Common
         public const string PACKAGE = "PCKG";

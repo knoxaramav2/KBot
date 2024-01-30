@@ -10,7 +10,7 @@ namespace KBot
 {
     public class ControlSystem
     {
-        private List<Entity> Entities;
+        private readonly List<Entity> Entities;
         private Controllable Player;
 
         public ControlSystem()

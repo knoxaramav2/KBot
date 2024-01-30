@@ -340,8 +340,8 @@ namespace KBot.UI
 
     public class Button : Clickable
     {
-        Label Label;
-        Texture2D ActiveImg;
+        readonly Label Label;
+        readonly Texture2D ActiveImg;
 
         public Button(
             Control parent = null,
@@ -418,7 +418,7 @@ namespace KBot.UI
     public class Container : Control
     {
         readonly protected List<ContainerSlotInfo> Items;
-        private GeoTypes GeoType;
+        private readonly GeoTypes GeoType;
         private Point Margin;
         
         public Container(GeoTypes gtype, 
@@ -541,8 +541,8 @@ namespace KBot.UI
 
     public struct CommonStateCheck
     {
-        private bool[] MStates = { false, false, false, false };
-        private int[] KeyStates = {0, 0};
+        private readonly bool[] MStates = { false, false, false, false };
+        private readonly int[] KeyStates = {0, 0};
 
         public CommonStateCheck()
         {

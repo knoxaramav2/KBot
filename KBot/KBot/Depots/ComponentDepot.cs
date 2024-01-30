@@ -15,63 +15,14 @@ namespace KBot.Depots
         private static ComponentDepot __Depots = null;
         public static ComponentDepot Depots => __Depots ??= new();
 
-        private Dictionary<string, Chassis> ChassisDepot;
-        private Dictionary<string, CPU> CpuDepot;
-        private Dictionary<string, Mem> MemDepot;
-        private Dictionary<string, Motor> MotorDepot;
-        private Dictionary<string, PowerCell> PowerDepot;
-        private Dictionary<string, Utility> UtilDepot;
-        private Dictionary<string, Weapon> WeaponDepot;
-        private Dictionary<string, MotherBoard> MoboDepot;
-
-        private (PartType type, string[], int) ParseBlock(ref string[] list, int idx, ref string package)
-        {
-            PartType type = PartType.Misc;
-            var ret = new List<string>();
-
-            for(; idx < list.Length; ++idx)
-            {
-                var ln = list[idx].Trim();
-                if (string.IsNullOrEmpty(ln) || ln.StartsWith('#')) 
-                    continue;
-                var trms = ln.Split(new char[] { ' ', '=' }, 2).Select(x => x.Trim()).ToList();
-                
-                if (trms.Count != 2)
-                {
-                    Debug.WriteLine($"WRN: Invalid MSF line:\n\t{ln}");
-                    continue;
-                }
-
-                var key = trms[0].ToUpper();
-                var value = trms[1];
-
-                if (key == "PCKG") { package = value; }
-                else if (key == "DEF") 
-                {
-                    if (type != PartType.Misc) { break; }
-                    value = value.ToUpper();
-                    switch (value)
-                    {
-                        case "CHASSIS": type = PartType.Chassis; break;
-                        case "CPU": type = PartType.CPU; break;
-                        case "MEM": type = PartType.Mem; break;
-                        case "MOTOR": type = PartType.Motor; break;
-                        case "POWER": type = PartType.Power; break;
-                        case "UTIL": type = PartType.Util; break;
-                        case "WEAPON": type = PartType.Weapon; break;
-                        case "MOBO": type = PartType.Mobo; break;
-                        default:
-                            Debug.WriteLine($"WRN: Invalid MNF part type\n\t{ln}");
-                            break;
-                    }
-                }
-                else { ret.Add(ln); }
-            }
-
-            if (idx == list.Length || type == PartType.Misc) { idx = -1; }
-
-            return (type, ret.ToArray(), idx);
-        }
+        private readonly Dictionary<string, Chassis> ChassisDepot;
+        private readonly Dictionary<string, CPU> CpuDepot;
+        private readonly Dictionary<string, Mem> MemDepot;
+        private readonly Dictionary<string, Motor> MotorDepot;
+        private readonly Dictionary<string, PowerCell> PowerDepot;
+        private readonly Dictionary<string, Utility> UtilDepot;
+        private readonly Dictionary<string, Weapon> WeaponDepot;
+        private readonly Dictionary<string, MotherBoard> MoboDepot;
 
         private void Register(Component component)
         {

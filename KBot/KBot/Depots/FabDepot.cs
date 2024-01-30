@@ -16,8 +16,8 @@ namespace KBot.Depots
         private static FabDepot __Depots = null;
         public static FabDepot Depots => __Depots ??= new();
 
-        private Dictionary<string, Bot> BotDepot;
-        private ComponentDepot CompDepot;
+        private readonly Dictionary<string, Bot> BotDepot;
+        private readonly ComponentDepot CompDepot;
 
         private void ReadManifest(PartType type, KV[] block, string pckg)
         {

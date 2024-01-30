@@ -12,7 +12,7 @@ namespace KBot.UI
 {
     internal class StageMenu : Menu, IControlLoop
     {
-        GameCtxState RetVal;
+        readonly GameCtxState RetVal;
 
         public StageMenu() 
             : base(GeoTypes.ALIGN, margin:new Point(1,1))
