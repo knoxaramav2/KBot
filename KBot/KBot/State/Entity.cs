@@ -25,6 +25,14 @@ namespace KBot.State
             Scale = scale;
             Opacity = opacity;
         }
+
+        public DrawableInfo()
+        {
+            Sprite = Providers.Sprites.Get("Cross");
+            Color = Color.Red;
+            Scale = 1f;
+            Opacity = 1f;
+        }
     }
 
     interface IDrawable
@@ -184,7 +192,7 @@ namespace KBot.State
             DrawCtx = Providers.DrawCtx;
             Window = Graphics.GraphicsDevice.PresentationParameters.Bounds;
             NoRender = norender;
-            DrawInfo = new(sprite, clr, size.X / sprite.Width);
+            DrawInfo = sprite == null ? new DrawableInfo() : new(sprite, clr, size.X / sprite.Width);
         }
 
         public virtual void Draw()
